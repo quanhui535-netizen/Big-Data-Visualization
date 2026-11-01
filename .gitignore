@@ -1,10 +1,9 @@
-# 原始数据与中间大文件（由脚本重建，不纳入版本库）
-data/raw/*.xlsx
-data/raw/*.zip
-data/raw/*.parquet
-data/clean/*.db
-data/clean/transactions.csv
-data/clean/*.parquet
+﻿# ---- 原始数据与中间大文件（由脚本重建，不入库）----
+# 用 **/ 前缀，兼容项目放在子目录的情况
+**/data/raw/*.xlsx
+**/data/raw/*.zip
+**/data/clean/*.db
+**/data/clean/transactions.csv
 
 # Python
 __pycache__/
