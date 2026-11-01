@@ -78,7 +78,7 @@ def caption(doc, text, *, size=10.5):
     return p
 
 
-def figure(doc, fname, cap, width=6.1):
+def figure(doc, fname, cap, width=5.65):
     path = FIG / fname
     if not path.exists():
         print("  missing figure:", fname)
@@ -114,9 +114,11 @@ def table(doc, header, rows, cap="", widths=None, font=9.5):
             pp.alignment = WD_ALIGN_PARAGRAPH.CENTER if i else WD_ALIGN_PARAGRAPH.LEFT
             set_font(pp.add_run(str(v)), "宋体", font)
     if widths:
+        total = sum(widths)
+        scale = 15.0 / total  # 版心宽度 15cm（A4 21cm - 左右各 3cm）
         for i, w in enumerate(widths):
             for row in t.rows:
-                row.cells[i].width = Cm(w)
+                row.cells[i].width = Cm(w * scale)
     return t
 
 
@@ -148,11 +150,12 @@ for line in ["题　　目：", "学　　院：", "专业班级：", "学　　
     p = doc.add_paragraph()
     p.paragraph_format.space_before = Pt(10)
     p.paragraph_format.left_indent = Cm(4.2)
+    p.paragraph_format.line_spacing = 1.5
     set_font(p.add_run(line), "宋体", 14)
-    set_font(p.add_run("　" * 22 if line != "题　　目：" else "　" * 6), "宋体", 14)
     if line == "题　　目：":
         set_font(p.add_run(TITLE), "宋体", 12)
-    p.add_run().add_break()
+    else:
+        set_font(p.add_run("　" * 20), "宋体", 14)
 
 p = doc.add_paragraph()
 p.alignment = WD_ALIGN_PARAGRAPH.CENTER

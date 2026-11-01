@@ -618,22 +618,19 @@ def fig21_rules_bubble():
     fig, ax = plt.subplots(figsize=(10.2, 6.0))
     sc = ax.scatter(r["count"], r["lift"], s=r["confidence"] * 260,
                     c=r["lift"], cmap="OrRd", alpha=0.7, edgecolor="white", linewidth=0.7, zorder=3)
-    for _, row in r.nlargest(3, "lift").iterrows():
-        ax.annotate(f"{row['antecedent_name']}\n→ {row['consequent_name']}",
-                    (row["count"], row["lift"]),
-                    textcoords="offset points", xytext=(-14, 16), ha="right", fontsize=7.2,
-                    color=C["text"], arrowprops=dict(arrowstyle="-", color=C["sub"], lw=0.6))
-    for _, row in r.nlargest(2, "count").iterrows():
-        ax.annotate(f"{row['antecedent_name']}\n→ {row['consequent_name']}",
-                    (row["count"], row["lift"]),
-                    textcoords="offset points", xytext=(12, -20), fontsize=7.2,
-                    color=C["text"], arrowprops=dict(arrowstyle="-", color=C["sub"], lw=0.6))
+    top1 = r.nlargest(1, "lift").iloc[0]
+    ax.annotate(f"{top1['antecedent_name']}\n→ {top1['consequent_name']}（提升度 {top1['lift']:.1f}）",
+                (top1["count"], top1["lift"]),
+                textcoords="offset points", xytext=(26, 26), ha="left", fontsize=7.6,
+                color=C["text"], arrowprops=dict(arrowstyle="-", color=C["sub"], lw=0.7),
+                bbox=dict(facecolor="white", edgecolor="none", alpha=0.85, pad=2))
     cb = fig.colorbar(sc, ax=ax, pad=0.015, fraction=0.035)
     cb.set_label("提升度 Lift", fontsize=9)
     cb.outline.set_visible(False)
     ax.set_xlabel("覆盖订单数（单）")
     ax.set_ylabel("提升度 Lift（倍）")
     ax.set_xlim(130, r["count"].max() * 1.12)
+    ax.set_ylim(r["lift"].min() * 0.92, r["lift"].max() * 1.22)
     polish(ax, grid_axis="both")
     title_block(ax, "购物篮关联规则：覆盖广度与提升度",
                 "气泡大小＝置信度｜英国 15,365 张多品订单，971 条规则中取提升度 TOP120｜support≥1%、lift≥1.2、count≥15")
@@ -652,7 +649,7 @@ def fig22_sarima():
     fig, ax = plt.subplots(figsize=(11.0, 5.8))
     hist = d.loc[d.index >= "2011-08-01"]
     cap = float(np.nanpercentile(hist.values, 99) * 2.4)
-    ax.plot(hist.index, hist.values, color=C["gray"], lw=1.2, label="实际销售额")
+    ax.plot(hist.index, hist.values, color="#5A5A5A", lw=1.3, zorder=6, label="实际销售额")
     ax.plot(bt["date"], bt["pred"], color=C["blue"], lw=2.0, label="回测预测（56 天）")
     ax.fill_between(bt["date"], np.clip(bt["lower95"], 0, cap), np.clip(bt["upper95"], 0, cap),
                     color=C["blue"], alpha=0.16, label="95% 置信区间")
