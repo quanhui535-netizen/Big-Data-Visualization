@@ -1,0 +1,69 @@
+{
+  "raw_rows": 541909,
+  "clean_rows": 391148,
+  "keep_ratio": 0.7218,
+  "rows": 391148,
+  "orders": 18400,
+  "customers": 4333,
+  "skus": 3658,
+  "countries": 37,
+  "revenue": 8491574.44,
+  "date_min": "2010-12-01 08:26:00",
+  "date_max": "2011-12-09 12:50:00",
+  "cancelled_rows": 9251,
+  "guest_rows": 131354,
+  "missing_customer_rows": 131354,
+  "duplicate_rows": 5268,
+  "fk_check": true,
+  "steps": [
+    {
+      "step": "1 类型与日期格式统一",
+      "rows_before": 541909,
+      "rows_after": 541909,
+      "removed": 0,
+      "note": ""
+    },
+    {
+      "step": "2 完全重复记录去除",
+      "rows_before": 541909,
+      "rows_after": 536641,
+      "removed": 5268,
+      "note": ""
+    },
+    {
+      "step": "3 取消单拆分",
+      "rows_before": 536641,
+      "rows_after": 527390,
+      "removed": 9251,
+      "note": "取消单 9,251 行"
+    },
+    {
+      "step": "4 非商品行剔除（邮费/调整/费用）",
+      "rows_before": 527390,
+      "rows_after": 524984,
+      "removed": 2406,
+      "note": "剔除 2,406 行，如 ['BANK CHARGES', 'C2', 'DOT', 'M', 'POST']"
+    },
+    {
+      "step": "5 负数量与零/负单价剔除",
+      "rows_before": 524984,
+      "rows_after": 522504,
+      "removed": 2480,
+      "note": ""
+    },
+    {
+      "step": "6 客户标识缺失拆分",
+      "rows_before": 522504,
+      "rows_after": 391150,
+      "removed": 131354,
+      "note": "游客交易 131,354 行（1,509,593 英镑）"
+    },
+    {
+      "step": "7 极端值识别与剔除",
+      "rows_before": 391150,
+      "rows_after": 391148,
+      "removed": 2,
+      "note": "单价>1000 (0 行) / 数量>10000 (2 行)；P99.9 单价=35.0"
+    }
+  ]
+}

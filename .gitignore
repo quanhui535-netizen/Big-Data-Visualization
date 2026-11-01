@@ -1,0 +1,27 @@
+# 原始数据与中间大文件（由脚本重建，不纳入版本库）
+data/raw/*.xlsx
+data/raw/*.zip
+data/raw/*.parquet
+data/clean/*.db
+data/clean/transactions.csv
+data/clean/*.parquet
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 临时输出
+*.log
+_contact_*.png
+
+# Word 临时锁文件
+~$*
