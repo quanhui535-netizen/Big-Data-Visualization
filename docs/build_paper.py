@@ -15,6 +15,7 @@ from docx import Document
 from docx.enum.section import WD_SECTION
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
+from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Inches, Pt, RGBColor
 
@@ -41,7 +42,7 @@ def set_font(run, name="宋体", size=12, bold=False, color=None):
 
 
 def para(doc, text="", *, size=12, name="宋体", bold=False, indent_chars=2,
-         align=WD_ALIGN_PARAGRAPH.JUSTIFY, space_after=0, line=1.5):
+         align=WD_ALIGN_PARAGRAPH.LEFT, space_after=0, line=1.5):
     p = doc.add_paragraph()
     pf = p.paragraph_format
     pf.line_spacing = line
@@ -64,6 +65,7 @@ def heading(doc, text, level=1):
     pf.space_after = Pt(6 if level == 1 else 4)
     pf.line_spacing = 1.5
     pf.first_line_indent = Pt(0)
+    pf.keep_with_next = True
     set_font(p.add_run(text), name, size, bold=(level == 1))
     return p
 
@@ -78,7 +80,7 @@ def caption(doc, text, *, size=10.5):
     return p
 
 
-def figure(doc, fname, cap, width=5.65):
+def figure(doc, fname, cap, width=5.2):
     path = FIG / fname
     if not path.exists():
         print("  missing figure:", fname)
@@ -87,8 +89,43 @@ def figure(doc, fname, cap, width=5.65):
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_before = Pt(6)
     p.paragraph_format.space_after = Pt(2)
+    p.paragraph_format.keep_with_next = True
     p.add_run().add_picture(str(path), width=Inches(width))
     caption(doc, cap)
+
+
+def _set_cell_borders(cell, spec: dict[str, tuple[int, str]]):
+    """spec: {'top': (sz_eighth_pt, 'single'|'nil'), ...}"""
+    tcPr = cell._tc.get_or_add_tcPr()
+    tcBorders = tcPr.find(qn("w:tcBorders"))
+    if tcBorders is None:
+        tcBorders = OxmlElement("w:tcBorders")
+        tcPr.append(tcBorders)
+    for edge, (sz, val) in spec.items():
+        el = tcBorders.find(qn(f"w:{edge}"))
+        if el is None:
+            el = OxmlElement(f"w:{edge}")
+            tcBorders.append(el)
+        el.set(qn("w:val"), val)
+        el.set(qn("w:sz"), str(sz))
+        el.set(qn("w:space"), "0")
+        el.set(qn("w:color"), "000000")
+
+
+def _three_line_table(t):
+    """把表格改成三线表：顶线 1.5 磅、栏目线 0.75 磅、底线 1.5 磅，其余边框全部去掉。"""
+    n_rows = len(t.rows)
+    for r_idx, row in enumerate(t.rows):
+        for cell in row.cells:
+            spec = {"top": (0, "nil"), "bottom": (0, "nil"),
+                    "left": (0, "nil"), "right": (0, "nil"),
+                    "insideH": (0, "nil"), "insideV": (0, "nil")}
+            if r_idx == 0:
+                spec["top"] = (12, "single")      # 顶线 1.5 磅
+                spec["bottom"] = (6, "single")    # 栏目线 0.75 磅
+            if r_idx == n_rows - 1:
+                spec["bottom"] = (12, "single")   # 底线 1.5 磅
+            _set_cell_borders(cell, spec)
 
 
 def table(doc, header, rows, cap="", widths=None, font=9.5):
@@ -97,29 +134,69 @@ def table(doc, header, rows, cap="", widths=None, font=9.5):
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.paragraph_format.space_before = Pt(8)
         p.paragraph_format.space_after = Pt(2)
+        p.paragraph_format.keep_with_next = True
         set_font(p.add_run(cap), "宋体", 10.5, bold=True)
     t = doc.add_table(rows=1, cols=len(header))
-    t.style = "Table Grid"
     t.alignment = WD_TABLE_ALIGNMENT.CENTER
+    t.autofit = True
     for i, h in enumerate(header):
         cell = t.rows[0].cells[i]
         cell.text = ""
         pp = cell.paragraphs[0]
         pp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        pp.paragraph_format.space_before = Pt(2)
+        pp.paragraph_format.space_after = Pt(2)
         set_font(pp.add_run(str(h)), "宋体", font, bold=True)
     for row in rows:
         cells = t.add_row().cells
         for i, v in enumerate(row):
             pp = cells[i].paragraphs[0]
             pp.alignment = WD_ALIGN_PARAGRAPH.CENTER if i else WD_ALIGN_PARAGRAPH.LEFT
+            pp.paragraph_format.space_before = Pt(1)
+            pp.paragraph_format.space_after = Pt(1)
             set_font(pp.add_run(str(v)), "宋体", font)
     if widths:
         total = sum(widths)
         scale = 15.0 / total  # 版心宽度 15cm（A4 21cm - 左右各 3cm）
-        for i, w in enumerate(widths):
-            for row in t.rows:
-                row.cells[i].width = Cm(w * scale)
+        cm = [w * scale for w in widths]
+        _fix_table_width(t, cm)
+    _three_line_table(t)
+    # 行不跨页拆分，且整表尽量不跨页（除末行外全部 keep_with_next）
+    for idx, row in enumerate(t.rows):
+        trPr = row._tr.get_or_add_trPr()
+        if trPr.find(qn("w:cantSplit")) is None:
+            trPr.append(OxmlElement("w:cantSplit"))
+        if idx < len(t.rows) - 1:
+            for cell in row.cells:
+                for pp in cell.paragraphs:
+                    pp.paragraph_format.keep_with_next = True
     return t
+
+
+def _fix_table_width(t, cm_widths):
+    """固定表格版式：显式设置表宽与列宽，避免 Word 自动收缩。"""
+    t.autofit = False
+    tbl = t._tbl
+    tblPr = tbl.tblPr
+    for el in tblPr.findall(qn("w:tblW")):
+        tblPr.remove(el)
+    tblW = OxmlElement("w:tblW")
+    tblW.set(qn("w:w"), str(int(round(15.0 / 2.54 * 1440))))
+    tblW.set(qn("w:type"), "dxa")
+    tblPr.append(tblW)
+    for el in tblPr.findall(qn("w:tblLayout")):
+        tblPr.remove(el)
+    layout = OxmlElement("w:tblLayout")
+    layout.set(qn("w:type"), "fixed")
+    tblPr.append(layout)
+    for i, w in enumerate(cm_widths):
+        t.columns[i].width = Cm(w)
+        for row in t.rows:
+            row.cells[i].width = Cm(w)
+    # 表头跨页重复
+    trPr = t.rows[0]._tr.get_or_add_trPr()
+    if trPr.find(qn("w:tblHeader")) is None:
+        trPr.append(OxmlElement("w:tblHeader"))
 
 
 # ------------------------------------------------------------------ 文档骨架
@@ -155,7 +232,7 @@ for line in ["题　　目：", "学　　院：", "专业班级：", "学　　
     if line == "题　　目：":
         set_font(p.add_run(TITLE), "宋体", 12)
     else:
-        set_font(p.add_run("　" * 20), "宋体", 14)
+        set_font(p.add_run("＿" * 13), "宋体", 12)
 
 p = doc.add_paragraph()
 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -266,7 +343,7 @@ table(doc,
        ["UnitPrice", "单价（英镑）", "浮点", "销售额计算"],
        ["CustomerID", "客户编号，存在缺失", "浮点/整数", "客户级 RFM、同期群"],
        ["Country", "客户所在国家", "字符串", "市场结构、地理可视化"]],
-      cap="表 1　原始数据字段说明", widths=[3.0, 7.2, 2.6, 4.0], font=9)
+      cap="表 1　原始数据字段说明", widths=[2.8, 6.4, 2.2, 4.6], font=9)
 
 heading(doc, "2.2　合规获取方式（白名单方式说明）", 2)
 para(doc,
@@ -299,10 +376,14 @@ para(doc,
      f"形成可复述的清洗日志（表 2）。原始 {CLEAN['raw_rows']:,} 行最终保留 {CLEAN['clean_rows']:,} 行，"
      f"保留率 {CLEAN['keep_ratio']*100:.1f}%，共剔除 {CLEAN['raw_rows']-CLEAN['clean_rows']:,} 行。")
 rows = []
+NOTE = {"1": "统一为字符串/日期类型", "2": "与全表完全重复", "3": "拆出，单列统计",
+        "4": "邮费/手工调整/银行费用", "5": "数量≤0 或单价≤0", "6": "游客交易，单列统计",
+        "7": "数量>10000 的调整行"}
 for s in CLEAN["steps"]:
-    rows.append([s["step"], f"{s['rows_before']:,}", f"{s['rows_after']:,}", f"-{s['removed']:,}", s["note"][:34]])
+    rows.append([s["step"], f"{s['rows_before']:,}", f"{s['rows_after']:,}", f"{s['removed']:,}",
+                 NOTE.get(s["step"][:1], "")])
 table(doc, ["步骤", "处理前", "处理后", "剔除", "说明"], rows,
-      cap="表 2　十步清洗日志", widths=[5.6, 2.0, 2.0, 1.8, 5.4], font=8.5)
+      cap="表 2　十步清洗日志", widths=[4.8, 1.9, 1.9, 1.9, 5.9], font=8.5)
 para(doc,
      f"其中，取消单 {CLEAN['cancelled_rows']:,} 行被单独拆出，用于后续观察退货规模而不污染销售口径；"
      f"邮费、手工调整、银行手续费等非商品行 2406 行被剔除，因为它们不对应任何真实 SKU，会污染商品维度；"
@@ -381,7 +462,7 @@ for s in R["rfm"]["segments"]:
                      f"{s['平均R']:.0f}", f"{s['平均F']:.1f}"])
 table(doc, ["客户分群", "客户数", "人数占比", "销售额(万)", "销售额占比", "平均R(天)", "平均F(次)"],
       seg_rows, cap="表 4　RFM 八分群结构（M 中位数 661 英镑）",
-      widths=[3.6, 1.9, 2.0, 2.4, 2.4, 2.1, 2.0], font=9)
+      widths=[3.3, 1.8, 1.9, 2.3, 2.3, 2.0, 2.3], font=9)
 figure(doc, "fig16_RFM气泡散点图.png", "图 1　RFM 客户分布：R×F 平面上的价值分层（气泡面积＝累计消费金额）")
 figure(doc, "fig17_八分群价值对比.png", "图 2　八类客户的人数占比与销售额占比错配")
 
@@ -611,44 +692,47 @@ doc.add_page_break()
 heading(doc, "附录")
 heading(doc, "A　核心代码片段", 2)
 code = """# 03_analysis.py —— RFM 八分类核心逻辑
-REF_DATE = pd.Timestamp("2011-12-10")          # 数据最后一天的次日
+REF_DATE = pd.Timestamp("2011-12-10")   # 数据最后一天的次日
 rfm = (tx.groupby("CustomerID")
-         .agg(R=("InvoiceDate", lambda s: (REF_DATE - s.max()).days),
+         .agg(R=("InvoiceDate",
+                 lambda s: (REF_DATE - s.max()).days),
               F=("InvoiceNo", "nunique"),
               M=("Revenue", "sum"))
          .reset_index())
-r_med, f_med, m_med = rfm["R"].median(), rfm["F"].median(), rfm["M"].median()
-rfm["R_high"] = rfm["R"] <= r_med            # R 越小越近
+r_med = rfm["R"].median()
+f_med = rfm["F"].median()
+m_med = rfm["M"].median()
+rfm["R_high"] = rfm["R"] <= r_med       # R 越小越近
 rfm["F_high"] = rfm["F"] >= f_med
 rfm["M_high"] = rfm["M"] >= m_med
-# 8 种组合 -> 中文分群名（重要价值/发展/保持/挽留 × 一般价值/发展/保持/挽留）"""
+# 8 种组合 -> 八分群名（重要/一般 × 价值/发展/保持/挽留）"""
 for line in code.split("\n"):
     p = doc.add_paragraph()
     p.paragraph_format.line_spacing = 1.0
     p.paragraph_format.space_after = Pt(0)
     p.paragraph_format.left_indent = Cm(0.5)
-    set_font(p.add_run(line if line else " "), "Consolas", 9)
+    set_font(p.add_run(line if line else " "), "Consolas", 8.5)
 
 heading(doc, "B　Gitee/GitHub 仓库链接与目录结构", 2)
-para(doc, "仓库地址：https://github.com/<your-name>/online-retail-analysis （提交前请替换为公开仓库链接）", indent_chars=0)
+para(doc, "仓库地址：https://github.com/<your-name>/online-retail-analysis（提交前替换为公开链接）", indent_chars=0)
 tree = """repo/
-├── data/raw/            原始数据（online_retail.xlsx、下载元数据 source_meta.json）
-├── data/clean/          清洗后 transactions/orders/customers/products + schema 说明 + SQLite
-├── scripts/             01_load.py 02_clean.py 03_analysis.py 04_visuals.py 05_dashboard.py + common.py
-├── outputs/figures/     23 张 PNG + 图表索引.csv
-├── outputs/tables/      20 张结果表 + analysis_results.json
-├── outputs/dashboard/   dashboard.html（离线可开）及其静态资源
-├── docs/                本论文（docx/pdf）、数据来源合规声明.md、build_paper.py
-├── app.py               Streamlit 交互式仪表板
-├── requirements.txt     依赖清单
-├── run_all.py           一键复现入口
-└── README.md            项目简介、数据来源、复现步骤、图表索引、分工说明"""
+├── data/raw/          原始数据与 source_meta.json
+├── data/clean/        清洗后四表 + schema + SQLite
+├── scripts/           01_load ~ 05_dashboard + common.py
+├── outputs/figures/   23 张 PNG + 图表索引.csv
+├── outputs/tables/    20 张结果表 + analysis_results.json
+├── outputs/dashboard/ dashboard.html（离线可开）
+├── docs/              论文 docx/pdf、合规声明、build_paper.py
+├── app.py             Streamlit 交互式仪表板
+├── requirements.txt   依赖清单
+├── run_all.py         一键复现入口
+└── README.md          项目说明、复现步骤、图表索引"""
 for line in tree.split("\n"):
     p = doc.add_paragraph()
     p.paragraph_format.line_spacing = 1.0
     p.paragraph_format.space_after = Pt(0)
     p.paragraph_format.left_indent = Cm(0.5)
-    set_font(p.add_run(line), "Consolas", 9)
+    set_font(p.add_run(line), "Consolas", 8.5)
 
 heading(doc, "C　图表索引（fig01–fig23）", 2)
 idx = pd.read_csv(FIG / "图表索引.csv")

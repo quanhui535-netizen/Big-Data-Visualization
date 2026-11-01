@@ -21,11 +21,11 @@ h1 { font-size:34px; letter-spacing:2px; font-weight:800;
 .kpi .unit { font-size:14px; color:#8FB5D8; margin-left:4px; }
 .kpi .delta { position:absolute; right:16px; top:16px; font-size:12px; color:#4FD1C5;
               border:1px solid rgba(79,209,197,.4); border-radius:20px; padding:2px 9px; }
-.grid { display:grid; grid-template-columns: 1.55fr 1fr 1fr; grid-template-rows: 310px 280px 205px;
+.grid { display:grid; grid-template-columns: 1.55fr 1fr 1fr; grid-template-rows: 288px 262px 240px;
         gap:16px; }
 .cell { background:linear-gradient(160deg,rgba(17,42,73,.65),rgba(8,20,36,.9));
         border:1px solid rgba(63,169,245,.18); border-radius:10px; padding:6px; }
-.tbl { width:100%; border-collapse:collapse; font-size:12px; color:#CFE6FF; }
+.tbl { width:100%; border-collapse:collapse; font-size:11px; color:#CFE6FF; }
 .tbl th { color:#8FB5D8; font-weight:600; text-align:left; padding:6px 8px;
           border-bottom:1px solid rgba(63,169,245,.25); font-size:12px; }
 .tbl td { padding:5px 8px; border-bottom:1px dashed rgba(63,169,245,.12); }
@@ -120,8 +120,8 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   <div class="cell" style="grid-column:1;grid-row:3"><div id="c_country" style="width:100%;height:100%"></div></div>
   <div class="cell" style="grid-column:2;grid-row:3"><div id="c_week" style="width:100%;height:100%"></div></div>
   <div class="cell" style="grid-column:3;grid-row:3;padding:8px 10px">
-    <div class="cell-title">购物篮关联规则 TOP8（mlxtend · Apriori）</div>
-    <table class="tbl"><tr><th>购买组合（前项）</th><th>连带购买（后项）</th><th>置信度</th><th>提升度</th><th>订单数</th></tr><tr><td>HERB MARKER THYME + HE</td><td>HERB MARKER ROSEMA</td><td>96%</td><td>81.7</td><td>156</td></tr><tr><td>HERB MARKER ROSEMA</td><td>HERB MARKER THYME + </td><td>86%</td><td>81.7</td><td>156</td></tr><tr><td>HERB MARKER ROSEMA + H</td><td>HERB MARKER THYME</td><td>95%</td><td>81.7</td><td>158</td></tr><tr><td>HERB MARKER THYME</td><td>HERB MARKER ROSEMA +</td><td>88%</td><td>81.7</td><td>158</td></tr><tr><td>HERB MARKER THYME + HE</td><td>HERB MARKER ROSEMA</td><td>96%</td><td>81.3</td><td>158</td></tr><tr><td>HERB MARKER ROSEMA</td><td>HERB MARKER THYME + </td><td>87%</td><td>81.3</td><td>158</td></tr><tr><td>HERB MARKER THYME + HE</td><td>HERB MARKER ROSEMA</td><td>96%</td><td>81.2</td><td>155</td></tr><tr><td>HERB MARKER ROSEMA</td><td>HERB MARKER THYME + </td><td>86%</td><td>81.2</td><td>155</td></tr></table>
+    <div class="cell-title">购物篮关联规则 TOP4（mlxtend · Apriori）</div>
+    <table class="tbl"><tr><th>购买组合（前项）</th><th>连带购买（后项）</th><th>置信度</th><th>提升度</th><th>订单数</th></tr><tr><td>HERB MARKER THYME + HE</td><td>HERB MARKER ROSEMA</td><td>96%</td><td>81.7</td><td>156</td></tr><tr><td>HERB MARKER ROSEMA</td><td>HERB MARKER THYME + </td><td>86%</td><td>81.7</td><td>156</td></tr><tr><td>HERB MARKER ROSEMA + H</td><td>HERB MARKER THYME</td><td>95%</td><td>81.7</td><td>158</td></tr><tr><td>HERB MARKER THYME</td><td>HERB MARKER ROSEMA +</td><td>88%</td><td>81.7</td><td>158</td></tr></table>
   </div>
 </div>
 </div>
@@ -825,10 +825,6 @@ c_country.setOption({
             "name": "\u9500\u552e\u989d\uff08\u4e07\u82f1\u9551\uff09",
             "legendHoverLink": true,
             "data": [
-                3.7,
-                3.7,
-                3.7,
-                5.2,
                 5.6,
                 13.8,
                 18.4,
@@ -966,7 +962,8 @@ c_country.setOption({
                 "show": true,
                 "color": "#9DBBD8",
                 "margin": 8,
-                "fontSize": 10,
+                "interval": 0,
+                "fontSize": 9,
                 "richInheritPlainLabel": true,
                 "valueAnimation": false
             },
@@ -991,10 +988,6 @@ c_country.setOption({
             "animationEasingUpdate": "cubicOut",
             "animationDelayUpdate": 0,
             "data": [
-                "Sweden",
-                "Belgium",
-                "Japan",
-                "Switzerland",
                 "Spain",
                 "Australia",
                 "France",
@@ -1007,7 +1000,7 @@ c_country.setOption({
     "title": [
         {
             "show": true,
-            "text": "\u6d77\u5916\u5e02\u573a TOP10",
+            "text": "\u6d77\u5916\u5e02\u573a TOP6",
             "target": "blank",
             "subtext": "\u82f1\u56fd\u672c\u571f\u5df2\u5254\u9664\uff08\u5360\u6bd4 82.4%\uff09",
             "subtarget": "blank",
@@ -1108,19 +1101,16 @@ c_rfm.setOption({
                 }
             ],
             "radius": [
-                "38%",
-                "62%"
+                "34%",
+                "58%"
             ],
             "center": [
-                "50%",
+                "32%",
                 "56%"
             ],
             "label": {
-                "show": true,
-                "color": "#CFE6FF",
+                "show": false,
                 "margin": 8,
-                "fontSize": 9,
-                "formatter": "{b}\n{d}%",
                 "richInheritPlainLabel": true,
                 "valueAnimation": false
             },
@@ -1148,11 +1138,19 @@ c_rfm.setOption({
                 "\u4e00\u822c\u633d\u7559\u5ba2\u6237"
             ],
             "selected": {},
-            "show": false,
+            "show": true,
+            "right": "1%",
+            "top": "18%",
+            "orient": "vertical",
             "padding": 5,
-            "itemGap": 10,
-            "itemWidth": 25,
-            "itemHeight": 14,
+            "itemGap": 6,
+            "itemWidth": 9,
+            "itemHeight": 9,
+            "textStyle": {
+                "color": "#9DBBD8",
+                "fontSize": 9,
+                "richInheritPlainLabel": true
+            },
             "backgroundColor": "transparent",
             "borderColor": "#ccc",
             "borderRadius": 0,
@@ -1200,7 +1198,7 @@ c_rfm.setOption({
             "show": true,
             "text": "\u5ba2\u6237\u4ef7\u503c\u7ed3\u6784\uff08RFM \u516b\u5206\u7fa4\uff09",
             "target": "blank",
-            "subtext": "\u6309\u9500\u552e\u989d\u5360\u6bd4",
+            "subtext": "\u73af\u56fe\u9762\u79ef\uff1d\u9500\u552e\u989d\u5360\u6bd4",
             "subtarget": "blank",
             "left": "2%",
             "top": "3%",

@@ -52,8 +52,8 @@
 ├── outputs/
 │   ├── figures/            23 张 PNG（200 dpi）+ 图表索引.csv
 │   ├── tables/             结果表 + analysis_results.json
-│   └── dashboard/          dashboard.html（内联 echarts，断网可用）
-├── docs/                   论文 docx、数据来源合规声明、论文生成脚本
+│   └── dashboard/          dashboard.html（内联 echarts，断网可用）+ 大屏截图
+├── docs/                   论文 docx + pdf、合规声明、验收自检、论文生成脚本
 ├── app.py                  Streamlit 交互式仪表板（4 筛选器联动 6 组件）
 ├── requirements.txt
 ├── run_all.py              一键复现
@@ -114,7 +114,7 @@ python docs/build_paper.py
 |---|---|---|
 | fig01–fig15 | 渐变柱形、带平均线柱形、渐变圆角柱形、层叠柱形(100%)、蝴蝶、数值百分比条形、甘特、平滑折线、菱形走势、对比折线、单值圆环、南丁格尔玫瑰、玉玦、水球、柱形折线 | **模板复现 15 种**（对照教材 30 个模板） |
 | fig16–fig23 | RFM 气泡散点、八分群价值对比、同期群留存热力、帕累托、波士顿矩阵、关联规则气泡、SARIMA 预测带、ABC 分层 | **业务模型图 8 张** |
-| 大屏 | Pyecharts 静态大屏（10 组件）+ Streamlit 交互应用（4 筛选器 / 6 组件联动） | 交互可视化 |
+| 大屏 | Pyecharts 静态大屏（10 组件，截图 `dashboard_preview.png`）+ Streamlit 交互应用（4 筛选器 / 6 组件联动） | 交互可视化 |
 
 完整清单见 `outputs/figures/图表索引.csv`。
 

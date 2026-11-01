@@ -1,4 +1,4 @@
-"""05_dashboard.py —— Pyecharts 静态数据大屏（1920×1080，深色主题，可离线打开）
+﻿"""05_dashboard.py —— Pyecharts 静态数据大屏（1920×1080，深色主题，可离线打开）
 
 产物：outputs/dashboard/dashboard.html
 组件：4 个 KPI 卡 + 月度趋势 + 世界地图 + 国家条形 + RFM 环形 + 星期分布 + TOP 商品 + 明细表
@@ -34,8 +34,8 @@ KPI = [
 ]
 
 
-def base_opts(title: str, sub: str = "") -> opts.InitOpts:
-    return opts.InitOpts(theme=ThemeType.DARK, width="100%", height="100%", bg_color="transparent")
+def base_opts(height: int) -> opts.InitOpts:
+    return opts.InitOpts(theme=ThemeType.DARK, width="100%", height=f"{height}px", bg_color="transparent")
 
 
 def chart_title(title: str, sub: str = "") -> opts.TitleOpts:
@@ -56,12 +56,11 @@ def build() -> dict[str, tuple[str, str]]:
     week = pd.read_csv(TBL_DIR / "weekday_trend.csv")
     rfm = pd.read_csv(TBL_DIR / "rfm_segment_summary.csv")
     sku = pd.read_csv(TBL_DIR / "sku_top100.csv").head(10)
-    rules = pd.read_csv(TBL_DIR / "association_rules.csv").head(8)
     charts: dict[str, tuple[str, str]] = {}
 
     # 1 月度趋势：柱 + 折线双轴
     m = monthly.copy()
-    bar = (Bar(init_opts=base_opts(""))
+    bar = (Bar(init_opts=base_opts(274))
            .add_xaxis([s[2:] for s in m["Month"]])
            .add_yaxis("销售额（万英镑）", (m["销售额"] / 1e4).round(1).tolist(), bar_width="45%",
                       itemstyle_opts=opts.ItemStyleOpts(color=ACCENT, opacity=0.85),
@@ -87,7 +86,7 @@ def build() -> dict[str, tuple[str, str]]:
     # 2 世界地图
     cmap = country.copy()
     map_df = [[str(r["Country"]), round(float(r["销售额"]) / 1e4, 1)] for _, r in cmap.iterrows()]
-    mp = (Map(init_opts=base_opts(""))
+    mp = (Map(init_opts=base_opts(556))
           .add("销售额（万英镑）", map_df, "world", is_map_symbol_show=False,
                label_opts=opts.LabelOpts(is_show=False),
                itemstyle_opts=opts.ItemStyleOpts(area_color="#12345A", border_color="#2A5C8F"))
@@ -103,37 +102,39 @@ def build() -> dict[str, tuple[str, str]]:
     charts["c_map"] = (mp.dump_options(), "")
 
     # 3 国家 TOP10 横向条形
-    c10 = country[country["Country"] != "United Kingdom"].head(10).iloc[::-1]
-    bar2 = (Bar(init_opts=base_opts(""))
+    c10 = country[country["Country"] != "United Kingdom"].head(6).iloc[::-1]
+    bar2 = (Bar(init_opts=base_opts(226))
             .add_xaxis(c10["Country"].tolist())
             .add_yaxis("销售额（万英镑）", (c10["销售额"] / 1e4).round(1).tolist(), bar_width="55%",
                        itemstyle_opts=opts.ItemStyleOpts(color="#4FD1C5"),
                        label_opts=opts.LabelOpts(is_show=True, position="right", color="#CFE6FF", font_size=10))
             .reversal_axis()
             .set_global_opts(
-                title_opts=chart_title("海外市场 TOP10", "英国本土已剔除（占比 82.4%）"),
+                title_opts=chart_title("海外市场 TOP6", "英国本土已剔除（占比 82.4%）"),
                 xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(color="#9DBBD8")),
-                yaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(color="#9DBBD8", font_size=10)),
+                yaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(color="#9DBBD8", font_size=9, interval=0)),
                 legend_opts=opts.LegendOpts(is_show=False),
                 tooltip_opts=opts.TooltipOpts(trigger="axis"))
             )
     charts["c_country"] = (bar2.dump_options(), "")
 
     # 4 RFM 环形
-    pie = (Pie(init_opts=base_opts(""))
+    pie = (Pie(init_opts=base_opts(248))
            .add("销售额占比", [[r["Segment"], round(float(r["销售额占比"]) * 100, 1)] for _, r in rfm.iterrows()],
-                radius=["38%", "62%"], center=["50%", "56%"],
-                label_opts=opts.LabelOpts(formatter="{b}\n{d}%", color="#CFE6FF", font_size=9))
+                radius=["34%", "58%"], center=["32%", "56%"],
+                label_opts=opts.LabelOpts(is_show=False))
            .set_global_opts(
-               title_opts=chart_title("客户价值结构（RFM 八分群）", "按销售额占比"),
-               legend_opts=opts.LegendOpts(is_show=False),
+               title_opts=chart_title("客户价值结构（RFM 八分群）", "环图面积＝销售额占比"),
+               legend_opts=opts.LegendOpts(orient="vertical", pos_right="1%", pos_top="18%",
+                                           item_width=9, item_height=9, item_gap=6,
+                                           textstyle_opts=opts.TextStyleOpts(color="#9DBBD8", font_size=9)),
                tooltip_opts=opts.TooltipOpts(trigger="item", formatter="{b}: {c}%"))
            )
     charts["c_rfm"] = (pie.dump_options(), "")
 
     # 5 星期分布
     w = week.copy()
-    bar3 = (Bar(init_opts=base_opts(""))
+    bar3 = (Bar(init_opts=base_opts(226))
             .add_xaxis(w["星期"].tolist())
             .add_yaxis("销售额（万英镑）", (w["销售额"] / 1e4).round(1).tolist(), bar_width="50%",
                        itemstyle_opts=opts.ItemStyleOpts(color="#7C9CF5"),
@@ -149,7 +150,7 @@ def build() -> dict[str, tuple[str, str]]:
 
     # 6 TOP10 商品
     labels = [str(t)[:14] for t in sku["Description"].fillna(sku["StockCode"])]
-    bar4 = (Bar(init_opts=base_opts(""))
+    bar4 = (Bar(init_opts=base_opts(248))
             .add_xaxis(labels)
             .add_yaxis("销售额（万英镑）", (sku["销售额"] / 1e4).round(1).tolist(), bar_width="52%",
                        itemstyle_opts=opts.ItemStyleOpts(color="#FFC000"),
@@ -166,7 +167,7 @@ def build() -> dict[str, tuple[str, str]]:
 
 
 def html_table() -> str:
-    rules = pd.read_csv(TBL_DIR / "association_rules.csv").nlargest(8, "lift")
+    rules = pd.read_csv(TBL_DIR / "association_rules.csv").nlargest(4, "lift")
     rows = []
     for _, r in rules.iterrows():
         rows.append(
@@ -196,11 +197,11 @@ h1 { font-size:34px; letter-spacing:2px; font-weight:800;
 .kpi .unit { font-size:14px; color:#8FB5D8; margin-left:4px; }
 .kpi .delta { position:absolute; right:16px; top:16px; font-size:12px; color:#4FD1C5;
               border:1px solid rgba(79,209,197,.4); border-radius:20px; padding:2px 9px; }
-.grid { display:grid; grid-template-columns: 1.55fr 1fr 1fr; grid-template-rows: 310px 280px 205px;
+.grid { display:grid; grid-template-columns: 1.55fr 1fr 1fr; grid-template-rows: 288px 262px 240px;
         gap:16px; }
 .cell { background:linear-gradient(160deg,rgba(17,42,73,.65),rgba(8,20,36,.9));
         border:1px solid rgba(63,169,245,.18); border-radius:10px; padding:6px; }
-.tbl { width:100%; border-collapse:collapse; font-size:12px; color:#CFE6FF; }
+.tbl { width:100%; border-collapse:collapse; font-size:11px; color:#CFE6FF; }
 .tbl th { color:#8FB5D8; font-weight:600; text-align:left; padding:6px 8px;
           border-bottom:1px solid rgba(63,169,245,.25); font-size:12px; }
 .tbl td { padding:5px 8px; border-bottom:1px dashed rgba(63,169,245,.12); }
@@ -249,7 +250,7 @@ def render(charts: dict[str, tuple[str, str]]) -> Path:
   <div class="cell" style="grid-column:1;grid-row:3"><div id="c_country" style="width:100%;height:100%"></div></div>
   <div class="cell" style="grid-column:2;grid-row:3"><div id="c_week" style="width:100%;height:100%"></div></div>
   <div class="cell" style="grid-column:3;grid-row:3;padding:8px 10px">
-    <div class="cell-title">购物篮关联规则 TOP8（mlxtend · Apriori）</div>
+    <div class="cell-title">购物篮关联规则 TOP4（mlxtend · Apriori）</div>
     {table_html}
   </div>
 </div>
