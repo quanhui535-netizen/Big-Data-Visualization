@@ -1,0 +1,22 @@
+﻿网络,社区编号,规模,占比,代表节点（度 Top3）,社区内平均加权度
+权游人物关系,0,40,0.3738,Tyrion、Sansa、Jaime,76.75
+权游人物关系,1,19,0.1776,Jon、Samwell、Mance,74.42
+权游人物关系,2,15,0.1402,Daenerys、Rhaegar、Jorah,43.87
+权游人物关系,3,12,0.1121,Robb、Catelyn、Brynden,52.17
+权游人物关系,4,8,0.0748,Bran、Rickon、Meera,95.25
+权游人物关系,5,7,0.0654,Arya、Sandor、Eddard,68.0
+权游人物关系,6,6,0.0561,Stannis、Davos、Melisandre,35.67
+技术标签共现,0,23,0.2,jquery、css、angularjs,204.87
+技术标签共现,1,18,0.1565,c#、asp.net、sql-server,176.87
+技术标签共现,2,14,0.1217,spring、hibernate、java,154.59
+技术标签共现,3,11,0.0957,linux、git、apache,72.55
+技术标签共现,4,11,0.0957,mongodb、reactjs、node.js,140.01
+技术标签共现,5,10,0.087,python、c++、c,81.12
+技术标签共现,6,6,0.0522,amazon-web-services、jenkins、docker,60.52
+技术标签共现,7,6,0.0522,ios、objective-c、osx,204.82
+技术标签共现,8,4,0.0348,scala、hadoop、apache-spark,77.5
+技术标签共现,9,3,0.0261,typescript、angular2、angular,46.61
+技术标签共现,10,3,0.0261,vba、excel、excel-vba,99.59
+技术标签共现,11,2,0.0174,agile、tdd,37.15
+技术标签共现,12,2,0.0174,perl、regex,21.36
+技术标签共现,13,2,0.0174,selenium、testing,33.69

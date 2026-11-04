@@ -1,0 +1,11 @@
+﻿字段,缺失数,缺失率,数据类型,唯一值
+IMEI,2320,0.7741074407741074,float64,427
+state,64,0.02135468802135469,float64,8
+churn,0,0.0,int64,2
+ID,0,0.0,int64,2997
+join_time,0,0.0,datetime64[ns],1039
+vip,0,0.0,int64,2
+expenditure,0,0.0,float64,1260
+product,0,0.0,int64,91
+traffic,0,0.0,float64,1167
+call,0,0.0,float64,1364

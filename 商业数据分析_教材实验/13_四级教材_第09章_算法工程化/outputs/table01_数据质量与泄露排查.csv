@@ -1,0 +1,15 @@
+﻿字段,中文含义,业务角色,原始类型,问题
+ID,客户编号,标识,int64,无异常
+Suc_flag,营销是否成功（1=成功）,标签,int64,无异常
+ARPU,当月 ARPU（收入）,事后产生（泄露）,object,"空值 4,843 行（50.0%）；缺失与标签 100% 重合 → 标签泄露"
+PromCnt12,近 12 月促销接触次数,事前已知,float64,无异常
+PromCnt36,近 36 月促销接触次数,事前已知,float64,无异常
+PromCntMsg12,近 12 月短信促销次数,事前已知,float64,无异常
+PromCntMsg36,近 36 月短信促销次数,事前已知,float64,无异常
+Class,客户等级（1—4）,事前已知,int64,无异常
+Age,年龄,事前已知,object,"空值 2,407 行（24.9%）"
+Gender,性别 F/M/U,事前已知,object,无异常
+HomeOwner,是否业主 H/U,事前已知,object,无异常
+AvgARPU,历史平均 ARPU,事前已知,float64,无异常
+AvgHomeValue,平均房产价值,事前已知,int64,0 值 103 行（疑似未登记）
+AvgIncome,平均收入,事前已知,int64,"0 值 2,357 行（疑似未登记）"
